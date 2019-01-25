@@ -1,27 +1,14 @@
 #requires -RunAsAdministrator
-
-#needs to be run on a box with DPM/MABS
 Import-Module "DataProtectionManager"
 
-$getJobs = Get-DPMJob
+$dpm_alert = Get-DPMAlert
 
-#gets the failed jobs - might update for all jobs so can filter via function
-$failedJobs = $getJobs | where {$_.status -eq "Failed"}
+$header = @"
+<style>
+TABLE {border-width: 1px; border-style: solid; border-color: black; border-collapse: collapse;}
+TD {border-width: 1px; padding: 3px; border-style: solid; border-color: black;}
+</style>
+"@
 
-$failarray = @()
 
-#loop jobs and pull relevant info
-foreach ($failedjob in $failedJobs){
-    $failObject = [ordered]@{
-        Status = $failedJob.status
-        ProtectionGroup = $failedjob.Protectiongroupname
-        Error = $failedJob.tasks.errorcode
-        Datasources = $failedjob.DataSources
-        StartTime = $failedjob.starttime
-        EndTime = $failedjob.endtime
-        Duration = (New-TimeSpan -Start $failedjob.starttime -End $failedjob.endtime)
-
-    }
-    $failArray += $failObject
-}
-$failarray
+$dpm_alert | where{$_.isresolved -eq $false} | select targetobjectname, errorinfo, severity, server | ConvertTo-Html -Head $header | Out-File C:\Temp\testHTML.html
